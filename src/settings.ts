@@ -47,6 +47,8 @@ export class SettingsTab extends PluginSettingTab {
 
     containerEl.createEl("h2", { text: "AI 笔记整理 · 设置" });
 
+    this.renderGuide(containerEl);
+
     new Setting(containerEl)
       .setName("服务商")
       .setDesc("选择 API 服务商，会自动填入默认的接口地址和模型名。")
@@ -136,5 +138,27 @@ export class SettingsTab extends PluginSettingTab {
           }
         })
       );
+  }
+
+  private renderGuide(containerEl: HTMLElement) {
+    const guide = containerEl.createDiv({ cls: "aon-settings-guide" });
+    guide.createEl("div", { cls: "aon-guide-title", text: "使用说明" });
+    guide.createEl("p", {
+      cls: "aon-guide-intro",
+      text: "填好下面的 API Key 后，你可以这样用：",
+    });
+    const list = guide.createEl("ul", { cls: "aon-guide-list" });
+    const items: [string, string][] = [
+      ["打开仪表盘（库概览）", "Ctrl+P 搜「库概览」，或点左侧边栏底部的柱状图图标"],
+      ["打开 AI 问答", "Ctrl+P 搜「AI 问答」，或点左侧边栏的消息图标"],
+      ["整理笔记", "右键笔记 / 文件夹 →「AI 整理」；或在笔记正文里右键"],
+      ["摘要 / 重命名 / 双链 / MOC", "都在右键菜单，或命令面板搜索对应名称"],
+      ["撤销整理", "Ctrl+P 搜「撤销上次整理」"],
+    ];
+    for (const [label, desc] of items) {
+      const li = list.createEl("li");
+      li.createSpan({ cls: "aon-guide-label", text: label });
+      li.createSpan({ cls: "aon-guide-desc", text: `：${desc}` });
+    }
   }
 }
