@@ -202,6 +202,38 @@ export default class AiNoteOrganizerPlugin extends Plugin {
         }
       })
     );
+
+    this.registerEvent(
+      this.app.workspace.on("editor-menu", (menu, _editor, view) => {
+        const file = view.file;
+        if (!(file instanceof TFile) || file.extension !== "md") return;
+
+        menu.addItem((item) => {
+          item
+            .setTitle("AI 整理此笔记")
+            .setIcon("sparkles")
+            .onClick(() => this.organizeFiles([file]));
+        });
+        menu.addItem((item) => {
+          item
+            .setTitle("AI 生成摘要")
+            .setIcon("file-text")
+            .onClick(() => this.summarizeFiles([file]));
+        });
+        menu.addItem((item) => {
+          item
+            .setTitle("AI 重命名（起标题）")
+            .setIcon("pencil")
+            .onClick(() => this.retitleFiles([file]));
+        });
+        menu.addItem((item) => {
+          item
+            .setTitle("AI 添加相关链接")
+            .setIcon("link")
+            .onClick(() => this.linkFiles([file]));
+        });
+      })
+    );
   }
 
   async loadSettings() {

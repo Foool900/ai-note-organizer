@@ -30,6 +30,32 @@
   margin-right: 1px;
 }
 
+.aon-tag-edit {
+  margin-top: 4px;
+  align-items: center;
+}
+
+.aon-chip-removable {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.aon-chip-x {
+  cursor: pointer;
+  opacity: 0.6;
+  margin-left: 2px;
+}
+
+.aon-chip-x:hover {
+  opacity: 1;
+}
+
+.aon-tag-add {
+  width: 100px;
+  font-size: 0.82em;
+}
+
 /* ============ 预览列表 ============ */
 .aon-list {
   max-height: 55vh;

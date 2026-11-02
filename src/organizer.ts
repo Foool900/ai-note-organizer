@@ -610,7 +610,7 @@ export function sanitizeFileName(s: string): string {
     .slice(0, 80);
 }
 
-function sanitizeTag(s: string): string {
+export function sanitizeTag(s: string): string {
   return s.replace(/^#+/, "").replace(/[#[\]\n]/g, "").trim();
 }
 

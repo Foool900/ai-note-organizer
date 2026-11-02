@@ -1,12 +1,14 @@
 import { App, Modal, Notice } from "obsidian";
 import type { ClassifiedItem, RenameSuggestion } from "./organizer";
-import { sanitizeFolder, sanitizeFileName } from "./organizer";
+import { sanitizeFolder, sanitizeFileName, sanitizeTag } from "./organizer";
 import { colorFor } from "./palette";
 
 interface Row {
   item: ClassifiedItem;
   checkbox: HTMLInputElement;
   folderInput: HTMLInputElement;
+  tags: string[];
+  chipsEl: HTMLElement;
 }
 
 export class PreviewModal extends Modal {
@@ -83,12 +85,38 @@ export class PreviewModal extends Modal {
         folderInput.value = item.targetFolder;
         folderInput.placeholder = "留空则不移动";
 
-        if (item.tags.length) {
-          const chips = body.createDiv({ cls: "aon-tagcloud" });
-          for (const t of item.tags) chips.createSpan({ cls: "aon-chip", text: t });
-        }
+        const chipsEl = body.createDiv({ cls: "aon-tagcloud aon-tag-edit" });
+        const tags = [...item.tags];
+        const renderChips = () => {
+          chipsEl.empty();
+          for (const t of tags) {
+            const chip = chipsEl.createSpan({ cls: "aon-chip aon-chip-removable" });
+            chip.createSpan({ text: t });
+            const x = chip.createSpan({ cls: "aon-chip-x", text: "×" });
+            x.addEventListener("click", () => {
+              const i = tags.indexOf(t);
+              if (i >= 0) tags.splice(i, 1);
+              renderChips();
+            });
+          }
+          const add = chipsEl.createEl("input", {
+            type: "text",
+            cls: "aon-tag-add",
+            placeholder: "添加标签后回车",
+          });
+          add.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" && !e.isComposing) {
+              const v = sanitizeTag(add.value);
+              if (v && !tags.includes(v)) {
+                tags.push(v);
+                renderChips();
+              }
+            }
+          });
+        };
+        renderChips();
 
-        this.rows.push({ item, checkbox: cb, folderInput });
+        this.rows.push({ item, checkbox: cb, folderInput, tags, chipsEl });
       }
     }
 
@@ -100,7 +128,11 @@ export class PreviewModal extends Modal {
       const selected: ClassifiedItem[] = [];
       for (const row of this.rows) {
         if (!row.checkbox.checked) continue;
-        selected.push({ ...row.item, targetFolder: sanitizeFolder(row.folderInput.value) });
+        selected.push({
+          ...row.item,
+          targetFolder: sanitizeFolder(row.folderInput.value),
+          tags: row.tags,
+        });
       }
       if (selected.length === 0) {
         new Notice("没有勾选任何笔记");
