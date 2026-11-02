@@ -1,0 +1,10 @@
+{
+  "id": "ai-note-organizer",
+  "name": "AI Note Organizer",
+  "version": "1.0.0",
+  "minAppVersion": "1.0.0",
+  "description": "用 DeepSeek / 硅基流动等 OpenAI 兼容接口，智能整理笔记：自动分类移动文件夹并添加标签。",
+  "author": "Foool900",
+  "authorUrl": "https://github.com/Foool900",
+  "isDesktopOnly": false
+}

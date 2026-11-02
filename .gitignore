@@ -1,0 +1,19 @@
+# vscode
+.vscode
+
+# Intellij
+*.iml
+.idea
+
+# npm
+node_modules
+
+# Don't include the compiled main.js in the repo.
+# Distribute it via GitHub Releases instead.
+main.js
+
+# Exclude sourcemaps
+*.map
+
+# Exclude macOS Finder (System) Files
+.DS_Store
