@@ -64,7 +64,10 @@ export class Organizer {
     private getSettings: () => AiNoteOrganizerSettings
   ) {}
 
-  async classify(files: TFile[]): Promise<ClassifiedItem[]> {
+  async classify(
+    files: TFile[],
+    onProgress?: (done: number, total: number) => void
+  ): Promise<ClassifiedItem[]> {
     const records: NoteRecord[] = [];
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
@@ -85,6 +88,7 @@ export class Organizer {
     for (let start = 0; start < records.length; start += BATCH_SIZE) {
       const batch = records.slice(start, start + BATCH_SIZE);
       results.push(...(await this.classifyBatch(batch, folders, tags)));
+      onProgress?.(Math.min(start + BATCH_SIZE, records.length), records.length);
     }
     return results;
   }

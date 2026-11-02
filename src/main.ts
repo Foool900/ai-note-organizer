@@ -19,6 +19,7 @@ import type { ChatMessage } from "./ai";
 import { VaultChat } from "./chat";
 import { ChatView, CHAT_VIEW_TYPE } from "./chatView";
 import { DashboardView, DASHBOARD_VIEW_TYPE } from "./dashboardView";
+import { ProgressBar } from "./progress";
 
 interface PluginData {
   settings?: AiNoteOrganizerSettings;
@@ -29,12 +30,14 @@ export default class AiNoteOrganizerPlugin extends Plugin {
   settings: AiNoteOrganizerSettings;
   private organizer: Organizer;
   private vaultChat: VaultChat;
+  private progress: ProgressBar;
   private undoLog: AppliedOperation[] | null = null;
 
   async onload() {
     await this.loadSettings();
     this.organizer = new Organizer(this.app, () => this.settings);
     this.vaultChat = new VaultChat(this.app, () => this.settings);
+    this.progress = new ProgressBar(this);
 
     this.addSettingTab(new SettingsTab(this.app, this));
 
@@ -306,10 +309,12 @@ export default class AiNoteOrganizerPlugin extends Plugin {
       return;
     }
 
-    const notice = new Notice(`正在分析 ${files.length} 篇笔记…`, 0);
+    this.progress.show("整理分类");
     try {
-      const items = await this.organizer.classify(files);
-      notice.hide();
+      const items = await this.organizer.classify(files, (done, total) =>
+        this.progress.update(done, total)
+      );
+      this.progress.hide();
       if (items.length === 0) {
         new Notice("没有生成任何分类结果");
         return;
@@ -324,7 +329,7 @@ export default class AiNoteOrganizerPlugin extends Plugin {
         );
       }).open();
     } catch (e) {
-      notice.hide();
+      this.progress.hide();
       new Notice("整理失败: " + (e instanceof Error ? e.message : String(e)), 10000);
       console.error(e);
     }
@@ -341,17 +346,17 @@ export default class AiNoteOrganizerPlugin extends Plugin {
       return;
     }
 
-    const notice = new Notice("正在生成摘要…", 0);
+    this.progress.show("生成摘要");
     try {
       const res = await this.organizer.summarize(files, (done, total) => {
-        notice.setMessage(`正在生成摘要 (${done}/${total})…`);
+        this.progress.update(done, total);
       });
-      notice.hide();
+      this.progress.hide();
       new Notice(
         `完成：已写摘要 ${res.written} 篇${res.failed ? `，失败 ${res.failed} 篇` : ""}`
       );
     } catch (e) {
-      notice.hide();
+      this.progress.hide();
       new Notice("生成摘要失败: " + (e instanceof Error ? e.message : String(e)), 10000);
       console.error(e);
     }
@@ -368,12 +373,12 @@ export default class AiNoteOrganizerPlugin extends Plugin {
       return;
     }
 
-    const notice = new Notice("正在生成标题…", 0);
+    this.progress.show("生成标题");
     try {
       const suggestions = await this.organizer.suggestTitles(files, (done, total) => {
-        notice.setMessage(`正在生成标题 (${done}/${total})…`);
+        this.progress.update(done, total);
       });
-      notice.hide();
+      this.progress.hide();
       if (suggestions.length === 0) {
         new Notice("没有生成任何标题建议");
         return;
@@ -387,7 +392,7 @@ export default class AiNoteOrganizerPlugin extends Plugin {
         );
       }).open();
     } catch (e) {
-      notice.hide();
+      this.progress.hide();
       new Notice("生成标题失败: " + (e instanceof Error ? e.message : String(e)), 10000);
       console.error(e);
     }
@@ -404,18 +409,18 @@ export default class AiNoteOrganizerPlugin extends Plugin {
       return;
     }
 
-    const notice = new Notice("正在分析相关笔记…", 0);
+    this.progress.show("添加相关链接");
     try {
       const res = await this.organizer.linkRelated(files, (done, total) => {
-        notice.setMessage(`正在添加相关链接 (${done}/${total})…`);
+        this.progress.update(done, total);
       });
-      notice.hide();
+      this.progress.hide();
       new Notice(
         `完成：处理 ${res.notes} 篇，添加 ${res.links} 条相关链接` +
           (res.failed ? `，失败 ${res.failed} 篇` : "")
       );
     } catch (e) {
-      notice.hide();
+      this.progress.hide();
       new Notice("添加链接失败: " + (e instanceof Error ? e.message : String(e)), 10000);
       console.error(e);
     }
@@ -433,13 +438,13 @@ export default class AiNoteOrganizerPlugin extends Plugin {
       new Notice("请先在「设置 → AI 笔记整理」里填写 API Key");
       return;
     }
-    const notice = new Notice("正在生成 MOC…", 0);
+    this.progress.show("生成 MOC");
     try {
       const file = await this.organizer.generateMoc(folder);
-      notice.hide();
+      this.progress.hide();
       new Notice(`已生成：${file.path}`);
     } catch (e) {
-      notice.hide();
+      this.progress.hide();
       new Notice("生成 MOC 失败: " + (e instanceof Error ? e.message : String(e)), 10000);
       console.error(e);
     }
