@@ -1,6 +1,7 @@
 import { App, Modal, Notice } from "obsidian";
 import type { ClassifiedItem, RenameSuggestion } from "./organizer";
 import { sanitizeFolder, sanitizeFileName } from "./organizer";
+import { colorFor } from "./palette";
 
 interface Row {
   item: ClassifiedItem;
@@ -25,38 +26,70 @@ export class PreviewModal extends Modal {
     contentEl.empty();
     this.rows = [];
 
+    const moveCount = this.items.filter(
+      (i) => i.targetFolder && i.targetFolder !== i.currentFolder
+    ).length;
     contentEl.createEl("p", {
-      text: `共 ${this.items.length} 篇笔记。可修改目标文件夹（留空 = 不移动），取消勾选 = 跳过该笔记，确认后点「应用」。`,
+      text: `共 ${this.items.length} 篇 · 移动 ${moveCount} 篇 · 不移动 ${
+        this.items.length - moveCount
+      } 篇。可改目标文件夹（留空 = 不移动），取消勾选 = 跳过。`,
       cls: "aon-desc",
     });
 
     const list = contentEl.createDiv({ cls: "aon-list" });
 
+    // 按目标文件夹分组
+    const groups = new Map<string, ClassifiedItem[]>();
     for (const item of this.items) {
-      const rowEl = list.createEl("div", { cls: "aon-row" });
+      const key =
+        item.targetFolder && item.targetFolder !== item.currentFolder
+          ? item.targetFolder
+          : "不移动";
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(item);
+    }
+    const order = [...groups.keys()].sort((a, b) => {
+      if (a === "不移动") return 1;
+      if (b === "不移动") return -1;
+      return a.localeCompare(b, "zh");
+    });
 
-      const cb = rowEl.createEl("input", { type: "checkbox" });
-      cb.checked = true;
+    for (const key of order) {
+      const items = groups.get(key)!;
+      const groupEl = list.createDiv({ cls: "aon-group" });
+      groupEl.style.setProperty(
+        "--group-accent",
+        key === "不移动" ? "var(--text-muted)" : colorFor(key)
+      );
 
-      const body = rowEl.createDiv({ cls: "aon-row-text" });
-      body.createEl("div", { text: item.path, cls: "aon-path" });
+      const header = groupEl.createDiv({ cls: "aon-group-header" });
+      header.createSpan({ cls: "aon-dot" });
+      header.createSpan({ text: key });
+      header.createSpan({ cls: "aon-group-count", text: `${items.length} 篇` });
 
-      const edit = body.createEl("div", { cls: "aon-edit-row" });
-      const folderInput = edit.createEl("input", {
-        type: "text",
-        cls: "aon-folder-input",
-      });
-      folderInput.value = item.targetFolder;
-      folderInput.placeholder = "留空则不移动";
+      for (const item of items) {
+        const rowEl = groupEl.createDiv({ cls: "aon-row" });
+        const cb = rowEl.createEl("input", { type: "checkbox" });
+        cb.checked = true;
 
-      if (item.tags.length) {
-        edit.createEl("span", {
-          text: item.tags.map((t) => `#${t}`).join(" "),
-          cls: "aon-tags",
+        const body = rowEl.createDiv({ cls: "aon-row-text" });
+        body.createEl("div", { text: item.path, cls: "aon-path" });
+
+        const edit = body.createDiv({ cls: "aon-edit-row" });
+        const folderInput = edit.createEl("input", {
+          type: "text",
+          cls: "aon-folder-input",
         });
-      }
+        folderInput.value = item.targetFolder;
+        folderInput.placeholder = "留空则不移动";
 
-      this.rows.push({ item, checkbox: cb, folderInput });
+        if (item.tags.length) {
+          const chips = body.createDiv({ cls: "aon-tagcloud" });
+          for (const t of item.tags) chips.createSpan({ cls: "aon-chip", text: t });
+        }
+
+        this.rows.push({ item, checkbox: cb, folderInput });
+      }
     }
 
     const footer = contentEl.createDiv({ cls: "aon-footer" });

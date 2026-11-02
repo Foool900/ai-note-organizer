@@ -18,6 +18,7 @@ import { chatCompletion } from "./ai";
 import type { ChatMessage } from "./ai";
 import { VaultChat } from "./chat";
 import { ChatView, CHAT_VIEW_TYPE } from "./chatView";
+import { DashboardView, DASHBOARD_VIEW_TYPE } from "./dashboardView";
 
 interface PluginData {
   settings?: AiNoteOrganizerSettings;
@@ -39,6 +40,9 @@ export default class AiNoteOrganizerPlugin extends Plugin {
 
     this.registerView(CHAT_VIEW_TYPE, (leaf) => new ChatView(leaf, this));
     this.addRibbonIcon("message-circle", "AI 问答", () => this.activateChatView());
+
+    this.registerView(DASHBOARD_VIEW_TYPE, (leaf) => new DashboardView(leaf, this));
+    this.addRibbonIcon("bar-chart-3", "库概览", () => this.activateDashboard());
 
     this.addCommand({
       id: "organize-current-note",
@@ -92,6 +96,12 @@ export default class AiNoteOrganizerPlugin extends Plugin {
       id: "open-chat",
       name: "打开 AI 问答面板",
       callback: () => this.activateChatView(),
+    });
+
+    this.addCommand({
+      id: "open-dashboard",
+      name: "打开库概览",
+      callback: () => this.activateDashboard(),
     });
 
     this.registerEvent(
@@ -223,6 +233,28 @@ export default class AiNoteOrganizerPlugin extends Plugin {
       await leaf.setViewState({ type: CHAT_VIEW_TYPE, active: true });
     }
     workspace.revealLeaf(leaf);
+  }
+
+  async activateDashboard() {
+    const { workspace } = this.app;
+    let leaf = workspace.getLeavesOfType(DASHBOARD_VIEW_TYPE)[0];
+    if (!leaf) {
+      leaf = workspace.getRightLeaf(false)!;
+      await leaf.setViewState({ type: DASHBOARD_VIEW_TYPE, active: true });
+    }
+    workspace.revealLeaf(leaf);
+  }
+
+  async organizeCurrentNote() {
+    await this.organizeFiles(this.currentFiles());
+  }
+
+  async organizeVault() {
+    await this.organizeFiles(this.vaultFiles());
+  }
+
+  organizeFolder() {
+    this.pickFolder();
   }
 
   async askVault(question: string, history: ChatMessage[]): Promise<string> {

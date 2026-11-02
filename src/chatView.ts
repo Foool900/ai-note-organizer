@@ -1,4 +1,4 @@
-import { ItemView, WorkspaceLeaf } from "obsidian";
+import { ItemView, MarkdownRenderer, WorkspaceLeaf } from "obsidian";
 import type AiNoteOrganizerPlugin from "./main";
 import type { ChatMessage } from "./ai";
 
@@ -31,10 +31,7 @@ export class ChatView extends ItemView {
     container.addClass("aon-chat");
 
     this.historyContainer = container.createDiv({ cls: "aon-chat-history" });
-    this.historyContainer.createEl("div", {
-      text: "问我关于你笔记的问题吧，比如「我关于指针的笔记都写了什么」。",
-      cls: "aon-chat-hint",
-    });
+    this.showHint();
 
     const inputRow = container.createDiv({ cls: "aon-chat-input-row" });
     this.input = inputRow.createEl("input", { type: "text", placeholder: "输入问题…" });
@@ -43,6 +40,21 @@ export class ChatView extends ItemView {
     });
     const sendBtn = inputRow.createEl("button", { text: "发送", cls: "mod-cta" });
     sendBtn.addEventListener("click", () => this.send());
+    const clearBtn = inputRow.createEl("button", { text: "清空" });
+    clearBtn.addEventListener("click", () => this.clear());
+  }
+
+  private showHint() {
+    this.historyContainer.createEl("div", {
+      text: "问我关于你笔记的问题吧，比如「我关于指针的笔记都写了什么」。",
+      cls: "aon-chat-hint",
+    });
+  }
+
+  private clear() {
+    this.history = [];
+    this.historyContainer.empty();
+    this.showHint();
   }
 
   private async send() {
@@ -53,22 +65,26 @@ export class ChatView extends ItemView {
     this.addBubble("user", q);
     this.history.push({ role: "user", content: q });
 
-    const bubble = this.addBubble("assistant", "思考中…");
+    const bubble = this.addBubble("assistant");
+    bubble.setText("思考中…");
     try {
       const answer = await this.plugin.askVault(q, this.history);
-      bubble.setText(answer);
+      bubble.empty();
+      await MarkdownRenderer.render(this.app, answer, bubble, "", this);
       this.history.push({ role: "assistant", content: answer });
     } catch (e) {
+      bubble.empty();
       bubble.setText("出错了：" + (e instanceof Error ? e.message : String(e)));
     }
+    this.historyContainer.scrollTop = this.historyContainer.scrollHeight;
   }
 
-  private addBubble(role: "user" | "assistant", text: string): HTMLElement {
+  private addBubble(role: "user" | "assistant", text?: string): HTMLElement {
     const msg = this.historyContainer.createDiv({
       cls: `aon-chat-msg aon-chat-${role}`,
     });
     const bubble = msg.createDiv({ cls: "aon-chat-bubble" });
-    bubble.setText(text);
+    if (text !== undefined) bubble.setText(text);
     this.historyContainer.scrollTop = this.historyContainer.scrollHeight;
     return bubble;
   }

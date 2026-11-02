@@ -1,8 +1,36 @@
+/* ============ 通用：说明文字 / 按钮行 ============ */
 .aon-desc {
   color: var(--text-muted);
   margin-bottom: 12px;
 }
 
+.aon-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* ============ 标签 chips ============ */
+.aon-chip {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 0.82em;
+  line-height: 1.6;
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+  margin: 0 2px 2px 0;
+  white-space: nowrap;
+}
+
+.aon-chip::before {
+  content: "#";
+  opacity: 0.6;
+  margin-right: 1px;
+}
+
+/* ============ 预览列表 ============ */
 .aon-list {
   max-height: 55vh;
   overflow-y: auto;
@@ -34,13 +62,8 @@
 
 .aon-path {
   word-break: break-all;
-}
-
-.aon-tags {
-  color: var(--text-accent);
-  font-size: 0.9em;
-  margin-top: 2px;
-  white-space: nowrap;
+  color: var(--text-muted);
+  font-size: 0.88em;
 }
 
 .aon-edit-row {
@@ -55,6 +78,50 @@
   min-width: 0;
 }
 
+/* ============ 预览分组（按目标文件夹） ============ */
+.aon-group {
+  margin-bottom: 10px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.aon-group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  font-weight: 600;
+  font-size: 0.95em;
+  background: var(--background-secondary);
+  border-left: 4px solid var(--group-accent, var(--interactive-accent));
+}
+
+.aon-group-header .aon-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--group-accent, var(--interactive-accent));
+  flex: none;
+}
+
+.aon-group-count {
+  margin-left: auto;
+  color: var(--text-muted);
+  font-weight: 400;
+  font-size: 0.85em;
+}
+
+.aon-group .aon-row {
+  border-bottom: 1px solid var(--background-modifier-border);
+  padding-left: 12px;
+}
+
+.aon-group .aon-row:last-child {
+  border-bottom: none;
+}
+
+/* ============ 聊天面板 ============ */
 .aon-chat {
   display: flex;
   flex-direction: column;
@@ -90,10 +157,9 @@
 }
 
 .aon-chat-bubble {
-  max-width: 85%;
+  max-width: 88%;
   padding: 6px 10px;
   border-radius: 10px;
-  white-space: pre-wrap;
   word-break: break-word;
 }
 
@@ -104,6 +170,72 @@
 
 .aon-chat-assistant .aon-chat-bubble {
   background: var(--background-modifier-hover);
+}
+
+/* 聊天里的 Markdown 渲染样式 */
+.aon-chat-bubble p {
+  margin: 4px 0;
+}
+
+.aon-chat-bubble p:first-child {
+  margin-top: 0;
+}
+
+.aon-chat-bubble p:last-child {
+  margin-bottom: 0;
+}
+
+.aon-chat-bubble ul,
+.aon-chat-bubble ol {
+  margin: 4px 0;
+  padding-left: 18px;
+}
+
+.aon-chat-bubble h1,
+.aon-chat-bubble h2,
+.aon-chat-bubble h3,
+.aon-chat-bubble h4 {
+  margin: 8px 0 4px;
+  font-size: 1.05em;
+}
+
+.aon-chat-bubble code {
+  font-family: var(--font-monospace);
+  background: var(--background-modifier-border);
+  border-radius: 4px;
+  padding: 0 4px;
+  font-size: 0.9em;
+}
+
+.aon-chat-bubble pre {
+  background: var(--background-primary-alt);
+  border-radius: 6px;
+  padding: 8px;
+  overflow-x: auto;
+  margin: 6px 0;
+}
+
+.aon-chat-bubble pre code {
+  background: none;
+  padding: 0;
+}
+
+.aon-chat-bubble blockquote {
+  margin: 6px 0;
+  padding-left: 10px;
+  border-left: 3px solid var(--background-modifier-border);
+  color: var(--text-muted);
+}
+
+.aon-chat-bubble table {
+  border-collapse: collapse;
+  margin: 6px 0;
+}
+
+.aon-chat-bubble th,
+.aon-chat-bubble td {
+  border: 1px solid var(--background-modifier-border);
+  padding: 3px 8px;
 }
 
 .aon-chat-input-row {
@@ -117,9 +249,132 @@
   flex: 1;
 }
 
-.aon-footer {
+/* ============ 仪表盘 ============ */
+.aon-dash {
+  padding: 12px;
+  overflow-y: auto;
+  height: 100%;
   display: flex;
-  justify-content: flex-end;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.aon-dash-hero {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.aon-dash-hero .aon-hero-num {
+  font-size: 2.2em;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.aon-dash-hero .aon-hero-label {
+  color: var(--text-muted);
+}
+
+.aon-dash-section h3 {
+  margin: 0 0 8px;
+  font-size: 0.95em;
+  color: var(--text-normal);
+}
+
+/* 文件夹分布条形图 */
+.aon-bar-row {
+  display: flex;
+  align-items: center;
   gap: 8px;
-  margin-top: 12px;
+  margin-bottom: 6px;
+}
+
+.aon-bar-label {
+  flex: none;
+  width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.9em;
+  color: var(--text-normal);
+}
+
+.aon-bar-track {
+  flex: 1;
+  height: 16px;
+  background: var(--background-modifier-hover);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.aon-bar-fill {
+  height: 100%;
+  background: var(--interactive-accent);
+  border-radius: 4px 0 0 4px;
+  min-width: 2px;
+}
+
+.aon-bar-count {
+  flex: none;
+  width: 34px;
+  text-align: right;
+  font-size: 0.85em;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 标签云 */
+.aon-tagcloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  align-items: baseline;
+}
+
+.aon-tagcloud-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-normal);
+  cursor: default;
+}
+
+.aon-tagcloud-item .aon-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+}
+
+/* 最近修改 */
+.aon-recent-item {
+  padding: 4px 0;
+  border-bottom: 1px solid var(--background-modifier-border);
+  font-size: 0.9em;
+}
+
+.aon-recent-item:last-child {
+  border-bottom: none;
+}
+
+.aon-recent-title {
+  color: var(--text-normal);
+}
+
+.aon-recent-meta {
+  color: var(--text-muted);
+  font-size: 0.8em;
+}
+
+/* 快捷操作 */
+.aon-dash-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.aon-empty {
+  color: var(--text-muted);
+  font-size: 0.9em;
 }
