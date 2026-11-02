@@ -173,6 +173,11 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  background: linear-gradient(180deg, rgba(190, 215, 255, 0.28), var(--background-secondary) 45%);
+}
+
+.theme-dark .aon-chat {
+  background: linear-gradient(180deg, rgba(90, 110, 160, 0.16), var(--background-secondary) 45%);
 }
 
 .aon-chat-history {
@@ -307,6 +312,135 @@
   box-shadow: none;
   background: transparent;
   padding: 4px 10px;
+}
+
+/* 顶部导航栏 */
+.aon-chat-topbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px 4px;
+}
+
+.aon-chat-topbar-title {
+  font-weight: 600;
+  font-size: 0.95em;
+  color: var(--text-normal);
+}
+
+.aon-chat-topbar-spacer {
+  flex: 1;
+}
+
+.aon-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.aon-icon-btn:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+/* 空状态 */
+.aon-chat-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 36px 20px;
+}
+
+.aon-orb {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  margin-bottom: 18px;
+  background:
+    radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 44%),
+    linear-gradient(145deg, var(--interactive-accent-hover), var(--interactive-accent));
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.18), inset 0 -6px 14px rgba(0, 0, 0, 0.2);
+}
+
+.aon-chat-greeting {
+  font-size: 1.15em;
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: var(--text-normal);
+}
+
+.aon-chat-subtitle {
+  color: var(--text-muted);
+  font-size: 0.88em;
+  margin-bottom: 20px;
+}
+
+.aon-suggest {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.aon-suggest-chip {
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 0.85em;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  color: var(--text-normal);
+}
+
+.aon-suggest-chip:hover {
+  border-color: var(--interactive-accent);
+  color: var(--interactive-accent);
+}
+
+/* 渐变发送按钮 */
+.aon-send-btn {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--interactive-accent-hover), var(--interactive-accent));
+  color: var(--text-on-accent);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+.aon-send-btn:hover {
+  filter: brightness(1.06);
+}
+
+/* 底部状态栏 */
+.aon-chat-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 18px 10px;
+  font-size: 0.78em;
+  color: var(--text-muted);
+}
+
+.aon-status-sep {
+  width: 1px;
+  height: 12px;
+  background: var(--background-modifier-border);
+  flex: none;
 }
 
 /* ---------- 仪表盘 ---------- */
