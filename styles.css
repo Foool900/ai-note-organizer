@@ -661,3 +661,186 @@
   font-size: 0.85em;
   font-variant-numeric: tabular-nums;
 }
+
+/* ==========================================================================
+   闪卡 + 复习
+   ========================================================================== */
+
+/* 生成闪卡预览 */
+.aon-card-row {
+  align-items: flex-start;
+}
+
+.aon-card-back-input {
+  width: 100%;
+  min-height: 64px;
+  margin-top: 6px;
+  resize: vertical;
+  border-radius: 8px;
+  font-size: 0.9em;
+}
+
+/* 仪表盘复习横幅 */
+.aon-review-banner-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.aon-review-banner-num {
+  font-size: 2em;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.aon-review-banner-label {
+  color: var(--text-muted);
+}
+
+.aon-review-banner-row button {
+  margin-left: auto;
+}
+
+/* 复习弹窗 */
+.aon-review {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.aon-review-top {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.aon-review-progress-text {
+  font-size: 0.85em;
+  color: var(--text-muted);
+}
+
+.aon-review-track {
+  height: 8px;
+  background: var(--background-modifier-hover);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.aon-review-fill {
+  height: 100%;
+  background: var(--interactive-accent);
+  border-radius: 999px;
+  transition: width 0.3s;
+}
+
+/* 翻卡 */
+.aon-card-scene {
+  perspective: 1200px;
+}
+
+.aon-card {
+  position: relative;
+  width: 100%;
+  height: 320px;
+  transform-style: preserve-3d;
+  transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+.aon-card.is-flipped {
+  transform: rotateY(180deg);
+}
+
+.aon-card-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 16px;
+  padding: 20px 22px;
+  overflow-y: auto;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+}
+
+.aon-card-face p {
+  margin: 6px 0;
+}
+
+.aon-card-back {
+  transform: rotateY(180deg);
+}
+
+.aon-review-actions {
+  display: flex;
+  justify-content: center;
+}
+
+/* 四档评分按钮 */
+.aon-grade-row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.aon-grade-btn {
+  flex: 1;
+  border-radius: 999px;
+  padding: 11px 0;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: filter 0.12s, transform 0.06s;
+}
+
+.aon-grade-btn:hover {
+  filter: brightness(1.08);
+}
+
+.aon-grade-btn:active {
+  transform: scale(0.97);
+}
+
+.aon-grade-again {
+  background: #d03b3b;
+}
+
+.aon-grade-hard {
+  background: #ec835a;
+}
+
+.aon-grade-good {
+  background: #0ca30c;
+}
+
+.aon-grade-easy {
+  background: #2a78d6;
+}
+
+/* 复习完成 */
+.aon-review-done-orb {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  margin: 20px auto 12px;
+  background:
+    radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.5), transparent 44%),
+    linear-gradient(145deg, var(--interactive-accent-hover), var(--interactive-accent));
+}
+
+.aon-review-done-title {
+  text-align: center;
+  font-size: 1.2em;
+  font-weight: 700;
+  color: var(--text-normal);
+}
+
+.aon-review-done-sub {
+  text-align: center;
+  color: var(--text-muted);
+  margin: 6px 0 16px;
+}

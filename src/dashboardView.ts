@@ -47,9 +47,25 @@ export class DashboardView extends ItemView {
     const refreshBtn = actions.createEl("button", { text: "刷新" });
     refreshBtn.addEventListener("click", () => this.render());
 
+    await this.renderReview(container);
     this.renderFolders(container, files);
     this.renderTags(container, files);
     this.renderRecent(container, files);
+  }
+
+  private async renderReview(container: HTMLElement) {
+    const due = await this.plugin.getDueCount();
+    const sec = container.createDiv({ cls: "aon-dash-section aon-review-banner" });
+    const row = sec.createDiv({ cls: "aon-review-banner-row" });
+    row.createSpan({ cls: "aon-review-banner-num", text: String(due) });
+    row.createSpan({
+      cls: "aon-review-banner-label",
+      text: due === 0 ? "张卡片待复习，今天都复习完了 🎉" : "张卡片待复习",
+    });
+    if (due > 0) {
+      const btn = row.createEl("button", { text: "开始复习", cls: "mod-cta" });
+      btn.addEventListener("click", () => this.plugin.startReview());
+    }
   }
 
   private renderFolders(container: HTMLElement, files: TFile[]) {

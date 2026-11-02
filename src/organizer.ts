@@ -571,7 +571,7 @@ function stripFence(s: string): string {
   return m ? m[1].trim() : s;
 }
 
-function parseJsonLoose(text: string): any {
+export function parseJsonLoose(text: string): any {
   let s = text.trim();
   const fence = s.match(/```(?:json)?\s*([\s\S]*?)```/i);
   if (fence) s = fence[1].trim();

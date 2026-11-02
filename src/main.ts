@@ -20,6 +20,9 @@ import { VaultChat } from "./chat";
 import { ChatView, CHAT_VIEW_TYPE } from "./chatView";
 import { DashboardView, DASHBOARD_VIEW_TYPE } from "./dashboardView";
 import { ProgressBar } from "./progress";
+import { FlashcardManager } from "./flashcards";
+import { ReviewModal } from "./reviewModal";
+import { CardPreviewModal } from "./cardPreviewModal";
 
 interface PluginData {
   settings?: AiNoteOrganizerSettings;
@@ -31,6 +34,7 @@ export default class AiNoteOrganizerPlugin extends Plugin {
   private organizer: Organizer;
   private vaultChat: VaultChat;
   private progress: ProgressBar;
+  private flashcards: FlashcardManager;
   private undoLog: AppliedOperation[] | null = null;
 
   async onload() {
@@ -38,6 +42,7 @@ export default class AiNoteOrganizerPlugin extends Plugin {
     this.organizer = new Organizer(this.app, () => this.settings);
     this.vaultChat = new VaultChat(this.app, () => this.settings);
     this.progress = new ProgressBar(this);
+    this.flashcards = new FlashcardManager(this.app, () => this.settings);
 
     this.addSettingTab(new SettingsTab(this.app, this));
 
@@ -107,6 +112,18 @@ export default class AiNoteOrganizerPlugin extends Plugin {
       callback: () => this.activateDashboard(),
     });
 
+    this.addCommand({
+      id: "generate-flashcards",
+      name: "为当前笔记生成闪卡",
+      callback: () => this.generateFlashcards(this.currentFiles()),
+    });
+
+    this.addCommand({
+      id: "start-review",
+      name: "开始复习闪卡",
+      callback: () => this.startReview(),
+    });
+
     this.registerEvent(
       this.app.workspace.on("file-menu", (menu, file) => {
         if (file instanceof TFile && file.extension === "md") {
@@ -156,6 +173,17 @@ export default class AiNoteOrganizerPlugin extends Plugin {
               .setIcon("link")
               .onClick(() => this.linkFiles(files));
           });
+
+          menu.addItem((item) => {
+            item
+              .setTitle(
+                files.length > 1
+                  ? `AI 生成闪卡（${files.length} 篇）`
+                  : "AI 生成闪卡"
+              )
+              .setIcon("layers")
+              .onClick(() => this.generateFlashcards(files));
+          });
         } else if (file instanceof TFolder) {
           const folderFiles = () =>
             this.app.vault
@@ -199,6 +227,13 @@ export default class AiNoteOrganizerPlugin extends Plugin {
               .setIcon("map")
               .onClick(() => this.mocForFolder(file as TFolder));
           });
+
+          menu.addItem((item) => {
+            item
+              .setTitle("AI 为此文件夹生成闪卡")
+              .setIcon("layers")
+              .onClick(() => this.generateFlashcards(folderFiles()));
+          });
         }
       })
     );
@@ -231,6 +266,12 @@ export default class AiNoteOrganizerPlugin extends Plugin {
             .setTitle("AI 添加相关链接")
             .setIcon("link")
             .onClick(() => this.linkFiles([file]));
+        });
+        menu.addItem((item) => {
+          item
+            .setTitle("AI 生成闪卡")
+            .setIcon("layers")
+            .onClick(() => this.generateFlashcards([file]));
         });
       })
     );
@@ -290,6 +331,48 @@ export default class AiNoteOrganizerPlugin extends Plugin {
 
   organizeFolder() {
     this.pickFolder();
+  }
+
+  async generateFlashcards(files: TFile[]) {
+    files = files.filter((f) => f.extension === "md");
+    if (files.length === 0) {
+      new Notice("没有可处理的笔记");
+      return;
+    }
+    if (!this.settings.apiKey) {
+      new Notice("请先在「设置 → AI 笔记整理」里填写 API Key");
+      return;
+    }
+
+    this.progress.show("生成闪卡");
+    try {
+      const cards = await this.flashcards.generateCards(files, (done, total) =>
+        this.progress.update(done, total)
+      );
+      this.progress.hide();
+      if (cards.length === 0) {
+        new Notice("没有生成任何卡片");
+        return;
+      }
+      new CardPreviewModal(this.app, this.flashcards, cards, () => {}).open();
+    } catch (e) {
+      this.progress.hide();
+      new Notice("生成闪卡失败: " + (e instanceof Error ? e.message : String(e)), 10000);
+      console.error(e);
+    }
+  }
+
+  async startReview() {
+    const due = await this.flashcards.getDueCards();
+    if (due.length === 0) {
+      new Notice("今天没有到期的闪卡 🎉");
+      return;
+    }
+    new ReviewModal(this.app, this.flashcards, due).open();
+  }
+
+  async getDueCount(): Promise<number> {
+    return (await this.flashcards.getDueCards()).length;
   }
 
   async askVault(question: string, history: ChatMessage[]): Promise<string> {

@@ -6,6 +6,7 @@ export interface AiNoteOrganizerSettings {
   baseUrl: string;
   model: string;
   categories: string;
+  deckFolder: string;
 }
 
 export const PROVIDERS = [
@@ -31,6 +32,7 @@ export const DEFAULT_SETTINGS: AiNoteOrganizerSettings = {
   baseUrl: PROVIDERS[0].baseUrl,
   model: PROVIDERS[0].model,
   categories: "",
+  deckFolder: "闪卡",
 };
 
 export class SettingsTab extends PluginSettingTab {
@@ -119,6 +121,19 @@ export class SettingsTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           });
       });
+
+    new Setting(containerEl)
+      .setName("闪卡文件夹")
+      .setDesc("闪卡保存的文件夹名（在库根目录下），默认「闪卡」。")
+      .addText((t) =>
+        t
+          .setPlaceholder("闪卡")
+          .setValue(this.plugin.settings.deckFolder)
+          .onChange(async (v) => {
+            this.plugin.settings.deckFolder = v.trim() || "闪卡";
+            await this.plugin.saveSettings();
+          })
+      );
 
     new Setting(containerEl)
       .setName("测试连接")
