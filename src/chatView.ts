@@ -13,7 +13,7 @@ const SUGGESTIONS = [
 
 export class ChatView extends ItemView {
   private historyContainer: HTMLElement;
-  private input: HTMLInputElement;
+  private input: HTMLTextAreaElement;
   private history: ChatMessage[] = [];
 
   constructor(leaf: WorkspaceLeaf, private plugin: AiNoteOrganizerPlugin) {
@@ -52,13 +52,16 @@ export class ChatView extends ItemView {
 
     // 底部：胶囊输入框 + 渐变发送按钮
     const inputRow = container.createDiv({ cls: "aon-chat-input-row" });
-    this.input = inputRow.createEl("input", {
-      type: "text",
-      placeholder: "问我关于你笔记的问题…",
-    });
+    this.input = inputRow.createEl("textarea", { cls: "aon-chat-textarea" });
+    this.input.setAttribute("rows", "1");
+    this.input.setAttribute("placeholder", "问我关于你笔记的问题…");
     this.input.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && !e.isComposing) this.send();
+      if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
+        e.preventDefault();
+        this.send();
+      }
     });
+    this.input.addEventListener("input", () => this.autoResize());
     const sendBtn = inputRow.createEl("button", { cls: "aon-send-btn" });
     sendBtn.setAttribute("aria-label", "发送");
     setIcon(sendBtn, "arrow-up");
@@ -97,6 +100,7 @@ export class ChatView extends ItemView {
     const q = (text ?? this.input.value).trim();
     if (!q) return;
     this.input.value = "";
+    this.autoResize();
     if (this.history.length === 0) this.historyContainer.empty();
 
     this.addBubble("user", q);
@@ -114,6 +118,11 @@ export class ChatView extends ItemView {
       bubble.setText("出错了：" + (e instanceof Error ? e.message : String(e)));
     }
     this.historyContainer.scrollTop = this.historyContainer.scrollHeight;
+  }
+
+  private autoResize() {
+    this.input.style.height = "auto";
+    this.input.style.height = Math.min(this.input.scrollHeight, 160) + "px";
   }
 
   private addBubble(role: "user" | "assistant", text?: string): HTMLElement {

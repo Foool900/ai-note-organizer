@@ -339,31 +339,45 @@
 /* 胶囊形输入框 */
 .aon-chat-input-row {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: 6px;
   padding: 6px;
   margin: 6px 10px 8px;
   background: var(--background-primary);
-  border: 1px solid var(--background-modifier-border);
   border-radius: 18px;
   box-shadow:
     0 8px 24px rgba(0, 0, 0, 0.07),
     0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
-.aon-chat-input-row input {
+.aon-chat-input-row:focus-within {
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.09),
+    0 0 0 2px var(--interactive-accent);
+}
+
+.aon-chat-textarea {
   flex: 1;
   min-height: 40px;
+  max-height: 160px;
   border: none;
   box-shadow: none;
   background: transparent;
-  padding: 8px 14px;
+  resize: none;
+  padding: 10px 14px;
   font-size: 0.95em;
+  line-height: 1.5;
   color: var(--text-normal);
+  overflow-y: auto;
 }
 
-.aon-chat-input-row input::placeholder {
+.aon-chat-textarea::placeholder {
   color: var(--text-muted);
+}
+
+.aon-chat-textarea:focus {
+  outline: none;
+  box-shadow: none;
 }
 
 /* 顶部导航栏 */
