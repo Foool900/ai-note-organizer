@@ -24,6 +24,7 @@ import { ProgressBar } from "./progress";
 import { FlashcardManager, toDateStr, addDaysStr } from "./flashcards";
 import { ReviewModal } from "./reviewModal";
 import { CardPreviewModal } from "./cardPreviewModal";
+import { CardEditModal, CardManagerModal } from "./cardManager";
 import { WriteOpModal, WritePreviewModal, writeOpDef } from "./writeModal";
 import type { WriteOp } from "./writeModal";
 import { KnowledgeReview, ReviewRangeModal } from "./review";
@@ -137,6 +138,18 @@ export default class AiNoteOrganizerPlugin extends Plugin {
       id: "start-review",
       name: "开始复习闪卡",
       callback: () => this.startReview(),
+    });
+
+    this.addCommand({
+      id: "add-flashcard",
+      name: "添加闪卡",
+      callback: () => this.addCard(),
+    });
+
+    this.addCommand({
+      id: "manage-flashcards",
+      name: "管理闪卡",
+      callback: () => this.openCardManager(),
     });
 
     this.addCommand({
@@ -434,6 +447,14 @@ export default class AiNoteOrganizerPlugin extends Plugin {
 
   async getDueCount(): Promise<number> {
     return (await this.flashcards.getDueCards()).length;
+  }
+
+  async addCard() {
+    new CardEditModal(this.app, this.flashcards, null, () => {}).open();
+  }
+
+  async openCardManager() {
+    new CardManagerModal(this.app, this.flashcards, () => {}, () => this.startReview()).open();
   }
 
   async generateReview() {

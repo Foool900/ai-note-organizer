@@ -133,6 +133,31 @@ export class FlashcardManager {
     });
   }
 
+  async addCard(front: string, back: string, source = ""): Promise<TFile> {
+    const folder = this.deckFolder();
+    await this.ensureFolder(folder);
+    const today = toDateStr(new Date());
+    const name = (sanitizeFileName(front) || "卡片").slice(0, 50);
+    const path = await this.resolveAvailablePath(folder, `${name}.md`);
+    const content = buildCardContent(
+      { front, back, source },
+      { due: today, interval: 0, ease: 2.5, reps: 0 }
+    );
+    return await this.app.vault.create(path, content);
+  }
+
+  async updateCard(card: Flashcard, front: string, back: string): Promise<void> {
+    const content = buildCardContent(
+      { front, back, source: card.source },
+      { due: card.due, interval: card.interval, ease: card.ease, reps: card.reps }
+    );
+    await this.app.vault.modify(card.file, content);
+  }
+
+  async deleteCard(card: Flashcard): Promise<void> {
+    await this.app.vault.trash(card.file, false);
+  }
+
   private async ensureFolder(path: string): Promise<void> {
     const segments = path.split("/").filter(Boolean);
     let cur = "";

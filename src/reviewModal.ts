@@ -16,6 +16,7 @@ export class ReviewModal extends Modal {
   private statsText: HTMLElement;
   private showBtn: HTMLElement;
   private gradeRow: HTMLElement;
+  private failed: Flashcard[] = [];
 
   constructor(
     app: App,
@@ -120,6 +121,7 @@ export class ReviewModal extends Modal {
 
   private async grade(g: Grade) {
     const card = this.queue[this.index];
+    if (g === "again") this.failed.push(card);
     try {
       await this.manager.gradeCard(card, g);
       this.opts.onGrade();
@@ -144,8 +146,18 @@ export class ReviewModal extends Modal {
       cls: "aon-review-done-sub",
       text: `本次复习 ${this.queue.length} 张 · 累计 ${s.totalReviewed} 张 · 连续 ${s.streak} 天`,
     });
-    const btn = contentEl.createEl("button", { text: "关闭", cls: "mod-cta" });
-    btn.addEventListener("click", () => this.close());
+    const footer = contentEl.createDiv({ cls: "aon-footer" });
+    if (this.failed.length > 0) {
+      const againBtn = footer.createEl("button", {
+        text: `再来一轮（${this.failed.length} 张忘记的）`,
+      });
+      againBtn.addEventListener("click", () => {
+        this.close();
+        new ReviewModal(this.app, this.manager, this.failed, this.opts).open();
+      });
+    }
+    const closeBtn = footer.createEl("button", { text: "关闭", cls: "mod-cta" });
+    closeBtn.addEventListener("click", () => this.close());
   }
 
   onClose() {
