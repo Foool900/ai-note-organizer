@@ -1,6 +1,7 @@
 import {
   App,
   FuzzySuggestModal,
+  MarkdownView,
   Notice,
   Plugin,
   TFile,
@@ -23,6 +24,8 @@ import { ProgressBar } from "./progress";
 import { FlashcardManager, toDateStr, addDaysStr } from "./flashcards";
 import { ReviewModal } from "./reviewModal";
 import { CardPreviewModal } from "./cardPreviewModal";
+import { WriteOpModal, WritePreviewModal, writeOpDef } from "./writeModal";
+import type { WriteOp } from "./writeModal";
 
 interface PluginData {
   settings?: AiNoteOrganizerSettings;
@@ -131,6 +134,12 @@ export default class AiNoteOrganizerPlugin extends Plugin {
       id: "start-review",
       name: "开始复习闪卡",
       callback: () => this.startReview(),
+    });
+
+    this.addCommand({
+      id: "ai-write",
+      name: "AI 改写 / 续写…",
+      callback: () => this.openWriteMenu(),
     });
 
     this.registerEvent(
@@ -282,6 +291,13 @@ export default class AiNoteOrganizerPlugin extends Plugin {
             .setIcon("layers")
             .onClick(() => this.generateFlashcards([file]));
         });
+        menu.addSeparator();
+        menu.addItem((item) => {
+          item
+            .setTitle("AI 改写 / 续写…")
+            .setIcon("pen-tool")
+            .onClick(() => this.openWriteMenu());
+        });
       })
     );
   }
@@ -409,6 +425,62 @@ export default class AiNoteOrganizerPlugin extends Plugin {
 
   async getDueCount(): Promise<number> {
     return (await this.flashcards.getDueCards()).length;
+  }
+
+  private openWriteMenu() {
+    new WriteOpModal(this.app, (op) => this.writeWithAI(op)).open();
+  }
+
+  private async writeWithAI(op: WriteOp) {
+    const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+    if (!view) {
+      new Notice("请先打开一篇笔记");
+      return;
+    }
+    const editor = view.editor;
+    const opDef = writeOpDef(op);
+
+    let inputText: string;
+    if (op === "continue") {
+      const cursor = editor.getCursor();
+      const start = { line: Math.max(0, cursor.line - 40), ch: 0 };
+      inputText = editor.getRange(start, cursor).trim();
+      if (!inputText) {
+        new Notice("光标前没有内容可续写");
+        return;
+      }
+    } else {
+      inputText = editor.getSelection().trim();
+      if (!inputText) {
+        new Notice("请先选中要处理的文字");
+        return;
+      }
+    }
+
+    if (!this.settings.apiKey) {
+      new Notice("请先在「设置 → AI 笔记整理」里填写 API Key");
+      return;
+    }
+
+    this.progress.show(opDef.label);
+    try {
+      const result = await chatCompletion(this.settings, [
+        { role: "system", content: opDef.system },
+        { role: "user", content: `文本：\n${inputText.slice(0, 4000)}` },
+      ]);
+      this.progress.hide();
+      new WritePreviewModal(this.app, result.trim(), (text) => {
+        if (op === "continue") {
+          editor.replaceRange(text, editor.getCursor(), editor.getCursor());
+        } else {
+          editor.replaceSelection(text);
+        }
+      }).open();
+    } catch (e) {
+      this.progress.hide();
+      new Notice("AI 写作失败: " + (e instanceof Error ? e.message : String(e)), 10000);
+      console.error(e);
+    }
   }
 
   async askVault(question: string, history: ChatMessage[]): Promise<string> {
