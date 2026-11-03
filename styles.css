@@ -972,3 +972,14 @@
   gap: 6px;
   flex: none;
 }
+
+.aon-fc-stats {
+  display: flex;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 0.9em;
+}
+
+.aon-fc-dot {
+  opacity: 0.5;
+}

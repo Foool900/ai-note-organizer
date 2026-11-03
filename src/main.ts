@@ -24,7 +24,8 @@ import { ProgressBar } from "./progress";
 import { FlashcardManager, toDateStr, addDaysStr } from "./flashcards";
 import { ReviewModal } from "./reviewModal";
 import { CardPreviewModal } from "./cardPreviewModal";
-import { CardEditModal, CardManagerModal } from "./cardManager";
+import { CardEditModal } from "./cardManager";
+import { FlashcardView, FLASHCARD_VIEW_TYPE } from "./flashcardView";
 import { WriteOpModal, WritePreviewModal, writeOpDef } from "./writeModal";
 import type { WriteOp } from "./writeModal";
 import { KnowledgeReview, ReviewRangeModal } from "./review";
@@ -46,7 +47,7 @@ export default class AiNoteOrganizerPlugin extends Plugin {
   private organizer: Organizer;
   private vaultChat: VaultChat;
   private progress: ProgressBar;
-  private flashcards: FlashcardManager;
+  flashcards: FlashcardManager;
   private review: KnowledgeReview;
   private reviewStats: ReviewStats = { totalReviewed: 0, lastReviewDate: "", streak: 0 };
   private undoLog: AppliedOperation[] | null = null;
@@ -66,7 +67,9 @@ export default class AiNoteOrganizerPlugin extends Plugin {
 
     this.registerView(DASHBOARD_VIEW_TYPE, (leaf) => new DashboardView(leaf, this));
     this.addRibbonIcon("bar-chart-3", "库概览", () => this.activateDashboard());
-    this.addRibbonIcon("layers", "复习闪卡", () => this.startReview());
+
+    this.registerView(FLASHCARD_VIEW_TYPE, (leaf) => new FlashcardView(leaf, this));
+    this.addRibbonIcon("layers", "闪卡", () => this.activateFlashcardView());
 
     this.addCommand({
       id: "organize-current-note",
@@ -147,9 +150,9 @@ export default class AiNoteOrganizerPlugin extends Plugin {
     });
 
     this.addCommand({
-      id: "manage-flashcards",
-      name: "管理闪卡",
-      callback: () => this.openCardManager(),
+      id: "open-flashcards",
+      name: "打开闪卡",
+      callback: () => this.activateFlashcardView(),
     });
 
     this.addCommand({
@@ -449,12 +452,25 @@ export default class AiNoteOrganizerPlugin extends Plugin {
     return (await this.flashcards.getDueCards()).length;
   }
 
+  getReviewStats() {
+    return {
+      totalReviewed: this.reviewStats.totalReviewed,
+      streak: this.reviewStats.streak,
+    };
+  }
+
   async addCard() {
     new CardEditModal(this.app, this.flashcards, null, () => {}).open();
   }
 
-  async openCardManager() {
-    new CardManagerModal(this.app, this.flashcards, () => {}, () => this.startReview()).open();
+  async activateFlashcardView() {
+    const { workspace } = this.app;
+    let leaf = workspace.getLeavesOfType(FLASHCARD_VIEW_TYPE)[0];
+    if (!leaf) {
+      leaf = workspace.getRightLeaf(false)!;
+      await leaf.setViewState({ type: FLASHCARD_VIEW_TYPE, active: true });
+    }
+    workspace.revealLeaf(leaf);
   }
 
   async generateReview() {
