@@ -20,13 +20,20 @@ import { VaultChat } from "./chat";
 import { ChatView, CHAT_VIEW_TYPE } from "./chatView";
 import { DashboardView, DASHBOARD_VIEW_TYPE } from "./dashboardView";
 import { ProgressBar } from "./progress";
-import { FlashcardManager } from "./flashcards";
+import { FlashcardManager, toDateStr, addDaysStr } from "./flashcards";
 import { ReviewModal } from "./reviewModal";
 import { CardPreviewModal } from "./cardPreviewModal";
 
 interface PluginData {
   settings?: AiNoteOrganizerSettings;
   undoLog?: AppliedOperation[] | null;
+  reviewStats?: ReviewStats;
+}
+
+interface ReviewStats {
+  totalReviewed: number;
+  lastReviewDate: string;
+  streak: number;
 }
 
 export default class AiNoteOrganizerPlugin extends Plugin {
@@ -35,6 +42,7 @@ export default class AiNoteOrganizerPlugin extends Plugin {
   private vaultChat: VaultChat;
   private progress: ProgressBar;
   private flashcards: FlashcardManager;
+  private reviewStats: ReviewStats = { totalReviewed: 0, lastReviewDate: "", streak: 0 };
   private undoLog: AppliedOperation[] | null = null;
 
   async onload() {
@@ -51,6 +59,7 @@ export default class AiNoteOrganizerPlugin extends Plugin {
 
     this.registerView(DASHBOARD_VIEW_TYPE, (leaf) => new DashboardView(leaf, this));
     this.addRibbonIcon("bar-chart-3", "库概览", () => this.activateDashboard());
+    this.addRibbonIcon("layers", "复习闪卡", () => this.startReview());
 
     this.addCommand({
       id: "organize-current-note",
@@ -283,14 +292,24 @@ export default class AiNoteOrganizerPlugin extends Plugin {
     if (data && typeof data === "object" && "settings" in data) {
       this.settings = Object.assign({}, DEFAULT_SETTINGS, (data as PluginData).settings);
       this.undoLog = (data as PluginData).undoLog ?? null;
+      this.reviewStats = (data as PluginData).reviewStats ?? {
+        totalReviewed: 0,
+        lastReviewDate: "",
+        streak: 0,
+      };
     } else {
       this.settings = Object.assign({}, DEFAULT_SETTINGS, (data as AiNoteOrganizerSettings) ?? {});
       this.undoLog = null;
+      this.reviewStats = { totalReviewed: 0, lastReviewDate: "", streak: 0 };
     }
   }
 
   async saveSettings() {
-    const data: PluginData = { settings: this.settings, undoLog: this.undoLog };
+    const data: PluginData = {
+      settings: this.settings,
+      undoLog: this.undoLog,
+      reviewStats: this.reviewStats,
+    };
     await this.saveData(data);
   }
 
@@ -368,7 +387,24 @@ export default class AiNoteOrganizerPlugin extends Plugin {
       new Notice("今天没有到期的闪卡 🎉");
       return;
     }
-    new ReviewModal(this.app, this.flashcards, due).open();
+    new ReviewModal(this.app, this.flashcards, due, {
+      getStats: () => ({
+        totalReviewed: this.reviewStats.totalReviewed,
+        streak: this.reviewStats.streak,
+      }),
+      onGrade: () => this.recordReview(),
+    }).open();
+  }
+
+  private recordReview() {
+    const today = toDateStr(new Date());
+    const s = this.reviewStats;
+    if (s.lastReviewDate !== today) {
+      s.streak = s.lastReviewDate === addDaysStr(today, -1) ? s.streak + 1 : 1;
+      s.lastReviewDate = today;
+    }
+    s.totalReviewed++;
+    this.saveSettings();
   }
 
   async getDueCount(): Promise<number> {

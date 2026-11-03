@@ -1,6 +1,11 @@
 import { App, Modal, MarkdownRenderer, Notice } from "obsidian";
 import type { Flashcard, FlashcardManager, Grade } from "./flashcards";
 
+interface ReviewOpts {
+  getStats: () => { totalReviewed: number; streak: number };
+  onGrade: () => void;
+}
+
 export class ReviewModal extends Modal {
   private index = 0;
   private cardEl: HTMLElement;
@@ -8,22 +13,30 @@ export class ReviewModal extends Modal {
   private backFace: HTMLElement;
   private progressText: HTMLElement;
   private progressFill: HTMLElement;
+  private statsText: HTMLElement;
   private showBtn: HTMLElement;
   private gradeRow: HTMLElement;
 
   constructor(
     app: App,
     private manager: FlashcardManager,
-    private queue: Flashcard[]
+    private queue: Flashcard[],
+    private opts: ReviewOpts
   ) {
     super(app);
   }
 
   async onOpen() {
     this.titleEl.setText("复习闪卡");
+    this.modalEl.addClass("aon-review-modal");
     const { contentEl } = this;
     contentEl.empty();
     contentEl.addClass("aon-review");
+
+    const header = contentEl.createDiv({ cls: "aon-review-header" });
+    header.createSpan({ cls: "aon-review-header-title", text: "今日复习" });
+    this.statsText = header.createSpan({ cls: "aon-review-header-stats" });
+    this.updateStats();
 
     const top = contentEl.createDiv({ cls: "aon-review-top" });
     this.progressText = top.createDiv({ cls: "aon-review-progress-text" });
@@ -34,10 +47,15 @@ export class ReviewModal extends Modal {
     this.cardEl = scene.createDiv({ cls: "aon-card" });
     this.frontFace = this.cardEl.createDiv({ cls: "aon-card-face aon-card-front" });
     this.backFace = this.cardEl.createDiv({ cls: "aon-card-face aon-card-back" });
+    // 点卡片任意处翻面（链接除外）
+    this.cardEl.addEventListener("click", (e) => {
+      if ((e.target as HTMLElement).closest("a")) return;
+      this.flip();
+    });
 
     const actions = contentEl.createDiv({ cls: "aon-review-actions" });
     this.showBtn = actions.createEl("button", {
-      text: "显示答案（空格）",
+      text: "点击卡片或空格显示答案",
       cls: "mod-cta",
     });
     this.showBtn.addEventListener("click", () => this.flip());
@@ -67,6 +85,11 @@ export class ReviewModal extends Modal {
     await this.showCard(0);
   }
 
+  private updateStats() {
+    const s = this.opts.getStats();
+    this.statsText.setText(`累计 ${s.totalReviewed} 张 · 连续 ${s.streak} 天`);
+  }
+
   private async showCard(i: number) {
     this.index = i;
     const card = this.queue[i];
@@ -94,6 +117,7 @@ export class ReviewModal extends Modal {
     const card = this.queue[this.index];
     try {
       await this.manager.gradeCard(card, g);
+      this.opts.onGrade();
     } catch (e) {
       new Notice("保存复习进度失败: " + (e instanceof Error ? e.message : String(e)));
     }
@@ -105,6 +129,7 @@ export class ReviewModal extends Modal {
   }
 
   private showDone() {
+    const s = this.opts.getStats();
     const { contentEl } = this;
     contentEl.empty();
     contentEl.addClass("aon-review");
@@ -112,7 +137,7 @@ export class ReviewModal extends Modal {
     contentEl.createEl("div", { cls: "aon-review-done-title", text: "复习完成！" });
     contentEl.createEl("div", {
       cls: "aon-review-done-sub",
-      text: `本次复习了 ${this.queue.length} 张卡片，按记忆曲线安排好了下次复习。`,
+      text: `本次复习 ${this.queue.length} 张 · 累计 ${s.totalReviewed} 张 · 连续 ${s.streak} 天`,
     });
     const btn = contentEl.createEl("button", { text: "关闭", cls: "mod-cta" });
     btn.addEventListener("click", () => this.close());

@@ -230,7 +230,7 @@ export function toDateStr(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-function addDaysStr(dateStr: string, n: number): string {
+export function addDaysStr(dateStr: string, n: number): string {
   const [y, m, d] = dateStr.split("-").map(Number);
   const dt = new Date(y, m - 1, d + n);
   return toDateStr(dt);

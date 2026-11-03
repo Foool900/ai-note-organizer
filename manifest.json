@@ -1,7 +1,7 @@
 {
   "id": "ai-note-organizer",
   "name": "AI Note Organizer",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "minAppVersion": "1.0.0",
   "description": "AI-powered note organizer: classify, tag, summarize, rename, link, and chat with your notes using any OpenAI-compatible API such as DeepSeek or SiliconFlow.",
   "author": "Foool900",

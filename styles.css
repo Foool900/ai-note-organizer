@@ -703,11 +703,32 @@
 }
 
 /* 复习弹窗 */
+.modal.aon-review-modal {
+  max-width: 680px;
+}
+
 .aon-review {
   display: flex;
   flex-direction: column;
   gap: 12px;
   padding: 4px 0;
+}
+
+.aon-review-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.aon-review-header-title {
+  font-size: 1.1em;
+  font-weight: 700;
+  color: var(--text-normal);
+}
+
+.aon-review-header-stats {
+  color: var(--text-muted);
+  font-size: 0.85em;
 }
 
 .aon-review-top {
@@ -746,6 +767,10 @@
   height: 320px;
   transform-style: preserve-3d;
   transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+.aon-card:not(.is-flipped) {
+  cursor: pointer;
 }
 
 .aon-card.is-flipped {
