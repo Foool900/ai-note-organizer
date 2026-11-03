@@ -107,10 +107,15 @@ export class ReviewModal extends Modal {
   }
 
   private flip() {
-    if (this.cardEl.hasClass("is-flipped")) return;
-    this.cardEl.addClass("is-flipped");
-    this.showBtn.style.display = "none";
-    this.gradeRow.style.display = "flex";
+    if (this.cardEl.hasClass("is-flipped")) {
+      this.cardEl.removeClass("is-flipped");
+      this.showBtn.style.display = "";
+      this.gradeRow.style.display = "none";
+    } else {
+      this.cardEl.addClass("is-flipped");
+      this.showBtn.style.display = "none";
+      this.gradeRow.style.display = "flex";
+    }
   }
 
   private async grade(g: Grade) {
