@@ -44,6 +44,7 @@ export class DashboardView extends ItemView {
     this.addQuickAction(actions, "整理整个库", () => this.plugin.organizeVault());
     this.addQuickAction(actions, "整理指定文件夹", () => this.plugin.organizeFolder());
     this.addQuickAction(actions, "打开 AI 问答", () => this.plugin.activateChatView());
+    this.addQuickAction(actions, "生成知识回顾", () => this.plugin.generateReview());
     const refreshBtn = actions.createEl("button", { text: "刷新" });
     refreshBtn.addEventListener("click", () => this.render());
 

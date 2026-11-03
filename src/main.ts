@@ -26,6 +26,7 @@ import { ReviewModal } from "./reviewModal";
 import { CardPreviewModal } from "./cardPreviewModal";
 import { WriteOpModal, WritePreviewModal, writeOpDef } from "./writeModal";
 import type { WriteOp } from "./writeModal";
+import { KnowledgeReview, ReviewRangeModal } from "./review";
 
 interface PluginData {
   settings?: AiNoteOrganizerSettings;
@@ -45,6 +46,7 @@ export default class AiNoteOrganizerPlugin extends Plugin {
   private vaultChat: VaultChat;
   private progress: ProgressBar;
   private flashcards: FlashcardManager;
+  private review: KnowledgeReview;
   private reviewStats: ReviewStats = { totalReviewed: 0, lastReviewDate: "", streak: 0 };
   private undoLog: AppliedOperation[] | null = null;
 
@@ -54,6 +56,7 @@ export default class AiNoteOrganizerPlugin extends Plugin {
     this.vaultChat = new VaultChat(this.app, () => this.settings);
     this.progress = new ProgressBar(this);
     this.flashcards = new FlashcardManager(this.app, () => this.settings);
+    this.review = new KnowledgeReview(this.app, () => this.settings);
 
     this.addSettingTab(new SettingsTab(this.app, this));
 
@@ -140,6 +143,12 @@ export default class AiNoteOrganizerPlugin extends Plugin {
       id: "ai-write",
       name: "AI 改写 / 续写…",
       callback: () => this.openWriteMenu(),
+    });
+
+    this.addCommand({
+      id: "generate-review",
+      name: "生成知识回顾",
+      callback: () => this.generateReview(),
     });
 
     this.registerEvent(
@@ -425,6 +434,42 @@ export default class AiNoteOrganizerPlugin extends Plugin {
 
   async getDueCount(): Promise<number> {
     return (await this.flashcards.getDueCards()).length;
+  }
+
+  async generateReview() {
+    if (!this.settings.apiKey) {
+      new Notice("请先在「设置 → AI 笔记整理」里填写 API Key");
+      return;
+    }
+    new ReviewRangeModal(this.app, async (days) => {
+      this.progress.show("生成知识回顾");
+      try {
+        const { markdown } = await this.review.generate(days);
+        const folder = "回顾";
+        if (!this.app.vault.getAbstractFileByPath(folder)) {
+          await this.app.vault.createFolder(folder);
+        }
+        const date = toDateStr(new Date());
+        let path = `${folder}/${date} 知识回顾.md`;
+        if (this.app.vault.getAbstractFileByPath(path)) {
+          for (let i = 2; ; i++) {
+            const p = `${folder}/${date} 知识回顾 ${i}.md`;
+            if (!this.app.vault.getAbstractFileByPath(p)) {
+              path = p;
+              break;
+            }
+          }
+        }
+        const file = await this.app.vault.create(path, markdown);
+        this.progress.hide();
+        const leaf = this.app.workspace.getLeaf(false);
+        await leaf.openFile(file);
+      } catch (e) {
+        this.progress.hide();
+        new Notice("生成知识回顾失败: " + (e instanceof Error ? e.message : String(e)), 10000);
+        console.error(e);
+      }
+    }).open();
   }
 
   private openWriteMenu() {
