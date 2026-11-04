@@ -2,10 +2,11 @@ import { App, TFile } from "obsidian";
 import { chatCompletion, ChatMessage } from "./ai";
 import type { AiNoteOrganizerSettings } from "./settings";
 
-const CHAT_SYSTEM_PROMPT = `你是 Obsidian 知识库的问答助手。根据提供的「检索到的相关笔记」回答用户问题。规则：
-1. 只依据提供的笔记内容回答；如果笔记里没有足够信息，就如实说「笔记里没有找到相关信息」，不要编造。
-2. 回答时引用相关笔记的标题，用【标题】标注。
-3. 用简洁、结构化的中文回答。`;
+const CHAT_SYSTEM_PROMPT = `你是一个全能的中文 AI 助手，同时可以访问用户 Obsidian 知识库里的笔记。回答规则：
+1. 如果问题与笔记相关，优先基于「检索到的相关笔记」回答，并引用笔记标题（用【标题】标注来源）。
+2. 如果问题与笔记无关（例如通用知识、编程、写作、翻译、头脑风暴等），用你自己的知识直接回答，不要拘泥于笔记。
+3. 笔记仅供参考，若不相关请忽略，不要强行引用。
+4. 保持简洁、结构清晰，用中文回答。`;
 
 const MAX_CONTEXT_NOTES = 8;
 const MAX_NOTE_CHARS = 1500;
@@ -46,7 +47,7 @@ export class VaultChat {
       ...history.slice(-6),
       {
         role: "user",
-        content: `检索到的相关笔记：\n\n${context}\n\n用户问题：${question}`,
+        content: `知识库中可能相关的笔记（仅供参考，不相关请忽略）：\n\n${context}\n\n用户问题：${question}`,
       },
     ];
     return await chatCompletion(settings, messages);
